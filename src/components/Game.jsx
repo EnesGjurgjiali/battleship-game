@@ -1,8 +1,11 @@
+// Component for the main game logic and state management
+
 import { useState } from "react";
 import StatusPanel from "./StatusPanel";
 import ShipPlacement from "./ShipPlacement";
 import Board from "./Board";
 import Controls from "./Controls";
+import Scoreboard from "./Scoreboard";
 
 const BOARD_SIZE = 10;
 const SHIPS = [
@@ -24,10 +27,14 @@ const Game = () => {
   const [lastAction, setLastAction] = useState("");
   const [currentShipIndex, setCurrentShipIndex] = useState(0);
   const [orientation, setOrientation] = useState("horizontal"); // horizontal or vertical
+  const [scores, setScores] = useState({ p1: 0, p2: 0 });
+  const [totalGames, setTotalGames] = useState(0);
 
-  // Handlers 
+  // Handlers
   const toggleOrientation = () => {
-    setOrientation((prev) => (prev === "horizontal" ? "vertical" : "horizontal"));
+    setOrientation((prev) =>
+      prev === "horizontal" ? "vertical" : "horizontal"
+    );
   };
 
   const handlePlaceShip = (x, y) => {
@@ -38,7 +45,11 @@ const Game = () => {
     for (let i = 0; i < ship.size; i++) {
       const row = orientation === "horizontal" ? x : x + i;
       const col = orientation === "horizontal" ? y + i : y;
-      if (row >= BOARD_SIZE || col >= BOARD_SIZE || newBoard[row][col] === "S") {
+      if (
+        row >= BOARD_SIZE ||
+        col >= BOARD_SIZE ||
+        newBoard[row][col] === "S"
+      ) {
         alert("Cannot place ship here!");
         return;
       }
@@ -95,6 +106,13 @@ const Game = () => {
       setWinner(currentPlayer);
       setPhase("gameOver");
       setLastAction(`Player ${currentPlayer} wins!`);
+
+      setScores((prev) => ({
+        ...prev,
+        [currentPlayer === 1 ? "p1" : "p2"]:
+          prev[currentPlayer === 1 ? "p1" : "p2"] + 1,
+      }));
+      setTotalGames((prev) => prev + 1);
     } else {
       // Switch turn
       setCurrentPlayer((prev) => (prev === 1 ? 2 : 1));
@@ -112,7 +130,7 @@ const Game = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-sky-900 to-blue-700 text-white p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-b from-sky-900 to-blue-700 text-white p-6">
       <h1 className="text-3xl font-bold mb-4">🚢 Battleship Game</h1>
 
       <StatusPanel
@@ -120,6 +138,12 @@ const Game = () => {
         currentPlayer={currentPlayer}
         winner={winner}
         lastAction={lastAction}
+      />
+
+      <Scoreboard
+        scores={scores}
+        currentPlayer={currentPlayer}
+        totalGames={totalGames}
       />
 
       {phase === "placement" && (
