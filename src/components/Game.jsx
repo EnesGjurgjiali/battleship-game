@@ -119,6 +119,98 @@ const Game = () => {
     }
   };
 
+  const randomizeShips = () => {
+    const newBoard = emptyBoard();
+    const shipsToPlace = [...SHIPS];
+
+    // Try to place each ship randomly
+    for (const ship of shipsToPlace) {
+      let placed = false;
+      let attempts = 0;
+
+      while (!placed && attempts < 100) {
+        const randomX = Math.floor(Math.random() * BOARD_SIZE);
+        const randomY = Math.floor(Math.random() * BOARD_SIZE);
+        const randomOrientation =
+          Math.random() > 0.5 ? "horizontal" : "vertical";
+
+        // Check if ship fits
+        let canPlace = true;
+        for (let i = 0; i < ship.size; i++) {
+          const row =
+            randomOrientation === "horizontal" ? randomX : randomX + i;
+          const col =
+            randomOrientation === "horizontal" ? randomY + i : randomY;
+          if (
+            row >= BOARD_SIZE ||
+            col >= BOARD_SIZE ||
+            newBoard[row][col] === "S"
+          ) {
+            canPlace = false;
+            break;
+          }
+        }
+
+        if (canPlace) {
+          // Place the ship
+          for (let i = 0; i < ship.size; i++) {
+            const row =
+              randomOrientation === "horizontal" ? randomX : randomX + i;
+            const col =
+              randomOrientation === "horizontal" ? randomY + i : randomY;
+            newBoard[row][col] = "S";
+          }
+          placed = true;
+        }
+        attempts++;
+      }
+    }
+
+    setBoards((prev) => ({ ...prev, [currentPlayer]: newBoard }));
+
+    // Check if all ships are placed
+    const allShipsPlaced = shipsToPlace.every((ship) => {
+      let count = 0;
+      for (let row of newBoard) {
+        for (let cell of row) {
+          if (cell === "S") count++;
+        }
+      }
+      return count === shipsToPlace.reduce((sum, s) => sum + s.size, 0);
+    });
+
+    if (allShipsPlaced) {
+      if (currentPlayer === 1) {
+        setCurrentPlayer(2);
+        setCurrentShipIndex(0);
+      } else {
+        setPhase("battle");
+        setCurrentPlayer(1);
+        setLastAction(`Player 1's turn to attack!`);
+      }
+    } else {
+      setCurrentShipIndex(0);
+    }
+  };
+
+  const startBattle = () => {
+    // Check if all ships are placed for current player
+    const board = boards[currentPlayer];
+    const totalShipCells = SHIPS.reduce((sum, ship) => sum + ship.size, 0);
+    const placedCells = board.flat().filter((cell) => cell === "S").length;
+
+    if (placedCells === totalShipCells) {
+      if (currentPlayer === 1) {
+        setCurrentPlayer(2);
+        setCurrentShipIndex(0);
+      } else {
+        setPhase("battle");
+        setCurrentPlayer(1);
+        setLastAction(`Player 1's turn to attack!`);
+      }
+    }
+  };
+
   const restartGame = () => {
     setBoards({ 1: emptyBoard(), 2: emptyBoard() });
     setPhase("placement");
@@ -129,9 +221,22 @@ const Game = () => {
     setOrientation("horizontal");
   };
 
+  // Check if all ships are placed for current player
+  const checkAllShipsPlaced = () => {
+    if (phase !== "placement") return false;
+    const board = boards[currentPlayer];
+    const totalShipCells = SHIPS.reduce((sum, ship) => sum + ship.size, 0);
+    const placedCells = board.flat().filter((cell) => cell === "S").length;
+    return placedCells === totalShipCells;
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-b from-sky-900 to-blue-700 text-white p-6">
-      <h1 className="text-3xl font-bold mb-4">🚢 Battleship Game</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-6">
+      <h1 className="text-4xl font-bold mb-2 tracking-wide text-center">
+        <span className="bg-linear-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+          BATTLESHIP
+        </span>
+      </h1>
 
       <StatusPanel
         phase={phase}
@@ -179,8 +284,10 @@ const Game = () => {
         phase={phase}
         onReset={restartGame}
         onToggleOrientation={toggleOrientation}
+        onStartBattle={startBattle}
+        onRandomize={randomizeShips}
         orientation={orientation}
-        allShipsPlaced={phase === "battle"}
+        allShipsPlaced={checkAllShipsPlaced()}
         currentPlayer={currentPlayer}
       />
     </div>
