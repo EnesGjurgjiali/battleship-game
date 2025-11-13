@@ -50,11 +50,15 @@ const Board = ({ currentPlayer, enemyBoard, onAttack, isEnemyView }) => {
                   if (cell === "S") displayValue = null; // We hide ships here
                 }
 
+                const handleClick = isEnemyView
+                  ? () => onAttack(rowIndex, colIndex)
+                  : undefined;
+
                 return (
                   <Cell
                     key={`${rowIndex}-${colIndex}`}
                     value={displayValue}
-                    onClick={() => isEnemyView && onAttack(rowIndex, colIndex)}
+                    onClick={handleClick}
                   />
                 );
               })
