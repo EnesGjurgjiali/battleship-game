@@ -58,6 +58,11 @@ const Game = () => {
   const [playerAttackBoard, setPlayerAttackBoard] = useState(emptyBoard()); // Board showing player 1's view of AI's board
   const aiAttackInProgress = useRef(false); // Prevent multiple simultaneous AI attacks
 
+  const isModSelectionPhase =
+    phase === "placement" &&
+    currentPlayer === 1 &&
+    boards[1].flat().every((cell) => cell === null);
+
   // Handlers
   const toggleOrientation = () => {
     setOrientation((prev) =>
@@ -352,33 +357,38 @@ const Game = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-2 tracking-wide text-center">
-        <span className="bg-linear-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
+        <span className="text-shadow-white">
           BATTLESHIP
         </span>
       </h1>
 
-      <GameModeSelector
-        gameMode={gameMode}
-        onGameModeChange={setGameMode}
-        aiDifficulty={aiDifficulty}
-        onDifficultyChange={setAiDifficulty}
-        phase={phase}
-        currentPlayer={currentPlayer}
-      />
+      {/* Show only GameModeSelector when in mode selection phase */}
+      {isModSelectionPhase ? (
+        <GameModeSelector
+          gameMode={gameMode}
+          onGameModeChange={setGameMode}
+          aiDifficulty={aiDifficulty}
+          onDifficultyChange={setAiDifficulty}
+          phase={phase}
+          currentPlayer={currentPlayer}
+        />
+      ) : (
+        <>
+          <StatusPanel
+            phase={phase}
+            currentPlayer={currentPlayer}
+            winner={winner}
+            lastAction={lastAction}
+            gameMode={gameMode}
+          />
 
-      <StatusPanel
-        phase={phase}
-        currentPlayer={currentPlayer}
-        winner={winner}
-        lastAction={lastAction}
-        gameMode={gameMode}
-      />
-
-      <Scoreboard
-        scores={scores}
-        currentPlayer={currentPlayer}
-        totalGames={totalGames}
-      />
+          <Scoreboard
+            scores={scores}
+            currentPlayer={currentPlayer}
+            totalGames={totalGames}
+          />
+        </>
+      )}
 
       {phase === "placement" && currentPlayer === 1 && (
         <ShipPlacement
@@ -408,11 +418,16 @@ const Game = () => {
 
       {phase === "battle" && (
         <div className="flex flex-col sm:flex-row gap-6">
-          {/* Player's own board - always show player 1's board */}
-          <Board currentPlayer={1} enemyBoard={boards[1]} isEnemyView={false} />
+          {/* Player's own board - show current player's board in 1v1, only player 1's board in 1vAI */}
+          <Board
+            currentPlayer={gameMode === "1vAI" ? 1 : currentPlayer}
+            enemyBoard={gameMode === "1vAI" ? boards[1] : boards[currentPlayer]}
+            isEnemyView={false}
+          />
 
-          {/* Enemy board - show AI's board (player 2) with ships hidden */}
+          {/* Enemy board */}
           {gameMode === "1vAI" ? (
+            // In 1vAI mode, show player's attack board (hits/misses on AI's board)
             <Board
               currentPlayer={1}
               enemyBoard={playerAttackBoard}
@@ -424,7 +439,7 @@ const Game = () => {
               }
             />
           ) : (
-            /* In 1v1 mode, show the enemy's board based on current player */
+            // In 1v1 mode, show the enemy's board
             <Board
               currentPlayer={currentPlayer}
               enemyBoard={boards[currentPlayer === 1 ? 2 : 1]}

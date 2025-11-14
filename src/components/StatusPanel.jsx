@@ -50,7 +50,7 @@ const StatusPanel = ({
   } else if (phase === "battle") {
     if (lastAction === "Hit!") {
       statusColor = "text-red-400";
-      message = "HIT! Target destroyed";
+      message = "HIT!";
     } else if (lastAction === "Miss!") {
       statusColor = "text-gray-300";
       message = "MISS! No contact";
