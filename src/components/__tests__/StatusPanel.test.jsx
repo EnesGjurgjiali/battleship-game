@@ -18,6 +18,20 @@ describe("StatusPanel", () => {
     expect(screen.getByText(/phase:/i)).toHaveTextContent("placement");
   });
 
+  it("shows AI placement message when AI is deploying", () => {
+    render(
+      <StatusPanel
+        phase="placement"
+        currentPlayer={2}
+        winner={null}
+        lastAction=""
+        gameMode="1vAI"
+      />
+    );
+
+    expect(screen.getByText(/ai is deploying its fleet/i)).toBeInTheDocument();
+  });
+
   it("indicates hit feedback during battle", () => {
     render(
       <StatusPanel
@@ -34,6 +48,20 @@ describe("StatusPanel", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("shows AI thinking message during AI's turn", () => {
+    render(
+      <StatusPanel
+        phase="battle"
+        currentPlayer={2}
+        winner={null}
+        lastAction=""
+        gameMode="1vAI"
+      />
+    );
+
+    expect(screen.getByText(/ai is thinking/i)).toBeInTheDocument();
+  });
+
   it("announces the winner during game over phase", () => {
     render(
       <StatusPanel
@@ -46,5 +74,33 @@ describe("StatusPanel", () => {
 
     expect(screen.getByText(/player 2 victorious/i)).toBeInTheDocument();
     expect(screen.queryByText(/phase:/i)).not.toBeInTheDocument();
+  });
+
+  it("announces AI victory in 1vAI mode", () => {
+    render(
+      <StatusPanel
+        phase="gameOver"
+        currentPlayer={2}
+        winner={2}
+        lastAction="Hit!"
+        gameMode="1vAI"
+      />
+    );
+
+    expect(screen.getByText(/ai victorious/i)).toBeInTheDocument();
+  });
+
+  it("announces player 1 victory in 1vAI mode", () => {
+    render(
+      <StatusPanel
+        phase="gameOver"
+        currentPlayer={1}
+        winner={1}
+        lastAction="Hit!"
+        gameMode="1vAI"
+      />
+    );
+
+    expect(screen.getByText(/player 1 victorious/i)).toBeInTheDocument();
   });
 });

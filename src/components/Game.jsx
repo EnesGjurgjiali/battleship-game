@@ -1,11 +1,13 @@
 // Component for the main game logic and state management
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import StatusPanel from "./StatusPanel";
 import ShipPlacement from "./ShipPlacement";
 import Board from "./Board";
 import Controls from "./Controls";
 import Scoreboard from "./Scoreboard";
+import GameModeSelector from "./GameModeSelector";
+import { placeAIShips, getAIAttack } from "../utils/aiPlayer";
 
 const BOARD_SIZE = 10;
 const SHIPS = [
@@ -29,6 +31,11 @@ const Game = () => {
   const [orientation, setOrientation] = useState("horizontal"); // horizontal or vertical
   const [scores, setScores] = useState({ p1: 0, p2: 0 });
   const [totalGames, setTotalGames] = useState(0);
+  const [gameMode, setGameMode] = useState("1v1"); // "1v1" or "1vAI"
+  const [aiDifficulty, setAiDifficulty] = useState("medium"); // "easy", "medium", "hard"
+  const [aiAttackBoard, setAiAttackBoard] = useState(emptyBoard()); // Board showing AI's view of player 1's board
+  const [playerAttackBoard, setPlayerAttackBoard] = useState(emptyBoard()); // Board showing player 1's view of AI's board
+  const aiAttackInProgress = useRef(false); // Prevent multiple simultaneous AI attacks
 
   // Handlers
   const toggleOrientation = () => {
@@ -98,6 +105,26 @@ const Game = () => {
     }
 
     setBoards((prev) => ({ ...prev, [enemyPlayer]: newBoard }));
+
+    // Update AI attack board when player 1 is attacked (AI's view of player 1's board)
+    if (enemyPlayer === 1 && gameMode === "1vAI") {
+      setAiAttackBoard((prev) => {
+        const newAiBoard = structuredClone(prev);
+        newAiBoard[x][y] = newBoard[x][y]; // Update with H or M
+        return newAiBoard;
+      });
+    }
+
+    // Update player attack board when AI is attacked (player 1's view of AI's board)
+    if (enemyPlayer === 2 && gameMode === "1vAI" && currentPlayer === 1) {
+      setPlayerAttackBoard((prev) => {
+        const newPlayerBoard = structuredClone(prev);
+        // Only store H or M, never S (ships should be hidden from player)
+        newPlayerBoard[x][y] = actionMessage === "Hit!" ? "H" : "M";
+        return newPlayerBoard;
+      });
+    }
+
     setLastAction(actionMessage);
 
     // Check for winner
@@ -105,7 +132,13 @@ const Game = () => {
     if (!hasShipsLeft) {
       setWinner(currentPlayer);
       setPhase("gameOver");
-      setLastAction(`Player ${currentPlayer} wins!`);
+      const winnerName =
+        currentPlayer === 1
+          ? "Player 1"
+          : gameMode === "1vAI"
+          ? "AI"
+          : "Player 2";
+      setLastAction(`${winnerName} wins!`);
 
       setScores((prev) => ({
         ...prev,
@@ -207,6 +240,11 @@ const Game = () => {
         setPhase("battle");
         setCurrentPlayer(1);
         setLastAction(`Player 1's turn to attack!`);
+        // Initialize attack boards when entering battle phase
+        if (gameMode === "1vAI") {
+          setPlayerAttackBoard(emptyBoard());
+          setAiAttackBoard(emptyBoard());
+        }
       }
     }
   };
@@ -219,6 +257,9 @@ const Game = () => {
     setLastAction("");
     setCurrentShipIndex(0);
     setOrientation("horizontal");
+    setAiAttackBoard(emptyBoard());
+    setPlayerAttackBoard(emptyBoard());
+    aiAttackInProgress.current = false;
   };
 
   // Check if all ships are placed for current player
@@ -230,6 +271,63 @@ const Game = () => {
     return placedCells === totalShipCells;
   };
 
+  // Handle AI ship placement
+  useEffect(() => {
+    if (phase === "placement" && currentPlayer === 2 && gameMode === "1vAI") {
+      const board = boards[2];
+      const totalShipCells = SHIPS.reduce((sum, ship) => sum + ship.size, 0);
+      const placedCells = board.flat().filter((cell) => cell === "S").length;
+
+      // Only place ships if they haven't been placed yet
+      if (placedCells !== totalShipCells) {
+        // AI places all ships automatically
+        const aiBoard = placeAIShips();
+        setBoards((prev) => ({ ...prev, 2: aiBoard }));
+        setCurrentShipIndex(SHIPS.length); // Mark all ships as placed
+
+        // Move to battle phase
+        setTimeout(() => {
+          setPhase("battle");
+          setCurrentPlayer(1);
+          setLastAction("Player 1's turn to attack!");
+          setAiAttackBoard(emptyBoard()); // Initialize AI attack board
+          setPlayerAttackBoard(emptyBoard()); // Initialize player attack board
+        }, 500);
+      }
+    }
+  }, [phase, currentPlayer, gameMode]);
+
+  // Handle AI attacks
+  useEffect(() => {
+    if (
+      phase === "battle" &&
+      currentPlayer === 2 &&
+      gameMode === "1vAI" &&
+      !winner &&
+      !aiAttackInProgress.current
+    ) {
+      aiAttackInProgress.current = true;
+      // AI's turn to attack
+      const delay =
+        aiDifficulty === "easy" ? 800 : aiDifficulty === "medium" ? 600 : 400;
+
+      const timeoutId = setTimeout(() => {
+        const attack = getAIAttack(aiAttackBoard, aiDifficulty);
+
+        if (attack) {
+          const [x, y] = attack;
+          handleAttack(1, x, y);
+        }
+        aiAttackInProgress.current = false;
+      }, delay);
+
+      return () => {
+        clearTimeout(timeoutId);
+        aiAttackInProgress.current = false;
+      };
+    }
+  }, [phase, currentPlayer, gameMode, aiAttackBoard, aiDifficulty, winner]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-2 tracking-wide text-center">
@@ -238,11 +336,21 @@ const Game = () => {
         </span>
       </h1>
 
+      <GameModeSelector
+        gameMode={gameMode}
+        onGameModeChange={setGameMode}
+        aiDifficulty={aiDifficulty}
+        onDifficultyChange={setAiDifficulty}
+        phase={phase}
+        currentPlayer={currentPlayer}
+      />
+
       <StatusPanel
         phase={phase}
         currentPlayer={currentPlayer}
         winner={winner}
         lastAction={lastAction}
+        gameMode={gameMode}
       />
 
       <Scoreboard
@@ -251,7 +359,7 @@ const Game = () => {
         totalGames={totalGames}
       />
 
-      {phase === "placement" && (
+      {phase === "placement" && currentPlayer === 1 && (
         <ShipPlacement
           currentPlayer={currentPlayer}
           board={boards[currentPlayer]}
@@ -261,22 +369,52 @@ const Game = () => {
         />
       )}
 
+      {phase === "placement" && currentPlayer === 2 && gameMode === "1v1" && (
+        <ShipPlacement
+          currentPlayer={currentPlayer}
+          board={boards[currentPlayer]}
+          onPlace={handlePlaceShip}
+          currentShip={SHIPS[currentShipIndex]}
+          orientation={orientation}
+        />
+      )}
+
+      {phase === "placement" && currentPlayer === 2 && gameMode === "1vAI" && (
+        <div className="text-center text-blue-300 text-lg font-semibold py-8">
+          AI is placing its fleet...
+        </div>
+      )}
+
       {phase === "battle" && (
         <div className="flex flex-col sm:flex-row gap-6">
-          {/* Player's own board */}
-          <Board
-            currentPlayer={currentPlayer}
-            enemyBoard={boards[currentPlayer]}
-            isEnemyView={false}
-          />
+          {/* Player's own board - always show player 1's board */}
+          <Board currentPlayer={1} enemyBoard={boards[1]} isEnemyView={false} />
 
-          {/* Enemy board */}
-          <Board
-            currentPlayer={currentPlayer}
-            enemyBoard={boards[currentPlayer === 1 ? 2 : 1]}
-            isEnemyView={true}
-            onAttack={(x, y) => handleAttack(currentPlayer === 1 ? 2 : 1, x, y)}
-          />
+          {/* Enemy board - show AI's board (player 2) with ships hidden */}
+          {gameMode === "1vAI" ? (
+            <Board
+              currentPlayer={1}
+              enemyBoard={playerAttackBoard}
+              isEnemyView={true}
+              onAttack={
+                currentPlayer === 1
+                  ? (x, y) => handleAttack(2, x, y)
+                  : undefined
+              }
+            />
+          ) : (
+            /* In 1v1 mode, show the enemy's board based on current player */
+            <Board
+              currentPlayer={currentPlayer}
+              enemyBoard={boards[currentPlayer === 1 ? 2 : 1]}
+              isEnemyView={true}
+              onAttack={
+                currentPlayer === 1
+                  ? (x, y) => handleAttack(2, x, y)
+                  : (x, y) => handleAttack(1, x, y)
+              }
+            />
+          )}
         </div>
       )}
 
