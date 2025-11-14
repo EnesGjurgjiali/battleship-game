@@ -373,9 +373,7 @@ const Game = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-2 tracking-wide text-center">
-        <span className="text-shadow-white">
-          BATTLESHIP
-        </span>
+        <span className="text-shadow-white">BATTLESHIP</span>
       </h1>
 
       {/* Show only GameModeSelector when in mode selection phase */}
@@ -436,7 +434,18 @@ const Game = () => {
         <div className="relative">
           {/* Turn overlay for 1v1 mode */}
           {gameMode === "1v1" && showTurnOverlay && (
-            <div className="absolute inset-0 bg-slate-900 bg-opacity-90 z-50 flex flex-col items-center justify-center rounded-lg">
+            <div
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-lg bg-[#020617] border border-blue-400/20shadow-[0_0_35px_rgba(0,100,255,0.25)]
+              before:pointer-events-none
+              before:absolute before:inset-0 before:rounded-lg
+              before:bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)]
+              before:bg-size-[100%_3px]
+
+              after:pointer-events-none
+              after:absolute after:inset-0 after:rounded-lg
+              after:bg-linear-to-b after:from-white/10 after:to-transparent
+              "
+            >
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-white mb-4">
                   Player {currentPlayer}'s Turn
@@ -446,7 +455,7 @@ const Game = () => {
                 </p>
                 <button
                   onClick={() => setShowTurnOverlay(false)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors cursor-pointer z-10"
                 >
                   I'm Ready!
                 </button>
@@ -458,7 +467,9 @@ const Game = () => {
             {/* Player's own board - show current player's board in 1v1, only player 1's board in 1vAI */}
             <Board
               currentPlayer={gameMode === "1vAI" ? 1 : currentPlayer}
-              enemyBoard={gameMode === "1vAI" ? boards[1] : boards[currentPlayer]}
+              enemyBoard={
+                gameMode === "1vAI" ? boards[1] : boards[currentPlayer]
+              }
               isEnemyView={false}
             />
 
