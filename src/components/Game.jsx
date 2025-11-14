@@ -56,7 +56,13 @@ const Game = () => {
   const [aiDifficulty, setAiDifficulty] = useState("medium"); // "easy", "medium", "hard"
   const [aiAttackBoard, setAiAttackBoard] = useState(emptyBoard()); // Board showing AI's view of player 1's board
   const [playerAttackBoard, setPlayerAttackBoard] = useState(emptyBoard()); // Board showing player 1's view of AI's board
+  const [showTurnOverlay, setShowTurnOverlay] = useState(false); // Overlay for 1v1 turn switching
   const aiAttackInProgress = useRef(false); // Prevent multiple simultaneous AI attacks
+
+  const isModSelectionPhase =
+    phase === "placement" &&
+    currentPlayer === 1 &&
+    boards[1].flat().every((cell) => cell === null);
 
   // Handlers
   const toggleOrientation = () => {
@@ -104,6 +110,10 @@ const Game = () => {
         setPhase("battle");
         setCurrentPlayer(1);
         setLastAction(`Player 1's turn to attack!`);
+        // Show overlay for first turn in 1v1 mode
+        if (gameMode === "1v1") {
+          setShowTurnOverlay(true);
+        }
       }
     }
   };
@@ -168,7 +178,10 @@ const Game = () => {
       }));
       setTotalGames((prev) => prev + 1);
     } else {
-      // Switch turn
+      // Switch turn - show overlay for 1v1 mode
+      if (gameMode === "1v1") {
+        setShowTurnOverlay(true);
+      }
       setCurrentPlayer((prev) => (prev === 1 ? 2 : 1));
     }
   };
@@ -241,6 +254,10 @@ const Game = () => {
         setPhase("battle");
         setCurrentPlayer(1);
         setLastAction(`Player 1's turn to attack!`);
+        // Show overlay for first turn in 1v1 mode
+        if (gameMode === "1v1") {
+          setShowTurnOverlay(true);
+        }
       }
     } else {
       setCurrentShipIndex(0);
@@ -265,6 +282,9 @@ const Game = () => {
         if (gameMode === "1vAI") {
           setPlayerAttackBoard(emptyBoard());
           setAiAttackBoard(emptyBoard());
+        } else {
+          // Show overlay for first turn in 1v1 mode
+          setShowTurnOverlay(true);
         }
       }
     }
@@ -280,6 +300,7 @@ const Game = () => {
     setOrientation("horizontal");
     setAiAttackBoard(emptyBoard());
     setPlayerAttackBoard(emptyBoard());
+    setShowTurnOverlay(false); // Reset overlay
     aiAttackInProgress.current = false;
   };
 
@@ -352,33 +373,36 @@ const Game = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 text-white p-6">
       <h1 className="text-4xl font-bold mb-2 tracking-wide text-center">
-        <span className="bg-linear-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">
-          BATTLESHIP
-        </span>
+        <span className="text-shadow-white">BATTLESHIP</span>
       </h1>
 
-      <GameModeSelector
-        gameMode={gameMode}
-        onGameModeChange={setGameMode}
-        aiDifficulty={aiDifficulty}
-        onDifficultyChange={setAiDifficulty}
-        phase={phase}
-        currentPlayer={currentPlayer}
-      />
+      {/* Show only GameModeSelector when in mode selection phase */}
+      {isModSelectionPhase ? (
+        <GameModeSelector
+          gameMode={gameMode}
+          onGameModeChange={setGameMode}
+          aiDifficulty={aiDifficulty}
+          onDifficultyChange={setAiDifficulty}
+          phase={phase}
+          currentPlayer={currentPlayer}
+        />
+      ) : (
+        <>
 
-      <StatusPanel
-        phase={phase}
-        currentPlayer={currentPlayer}
-        winner={winner}
-        lastAction={lastAction}
-        gameMode={gameMode}
-      />
-
-      <Scoreboard
-        scores={scores}
-        currentPlayer={currentPlayer}
-        totalGames={totalGames}
-      />
+          <Scoreboard
+            scores={scores}
+            currentPlayer={currentPlayer}
+            totalGames={totalGames}
+          />
+          <StatusPanel
+            phase={phase}
+            currentPlayer={currentPlayer}
+            winner={winner}
+            lastAction={lastAction}
+            gameMode={gameMode}
+          />
+        </>
+      )}
 
       {phase === "placement" && currentPlayer === 1 && (
         <ShipPlacement
@@ -407,35 +431,75 @@ const Game = () => {
       )}
 
       {phase === "battle" && (
-        <div className="flex flex-col sm:flex-row gap-6">
-          {/* Player's own board - always show player 1's board */}
-          <Board currentPlayer={1} enemyBoard={boards[1]} isEnemyView={false} />
+        <div className="relative">
+          {/* Turn overlay for 1v1 mode */}
+          {gameMode === "1v1" && showTurnOverlay && (
+            <div
+              className="absolute inset-0 z-50 flex flex-col items-center justify-center rounded-lg bg-[#020617] border border-blue-400/20shadow-[0_0_35px_rgba(0,100,255,0.25)]
+              before:pointer-events-none
+              before:absolute before:inset-0 before:rounded-lg
+              before:bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px)]
+              before:bg-size-[100%_3px]
 
-          {/* Enemy board - show AI's board (player 2) with ships hidden */}
-          {gameMode === "1vAI" ? (
-            <Board
-              currentPlayer={1}
-              enemyBoard={playerAttackBoard}
-              isEnemyView={true}
-              onAttack={
-                currentPlayer === 1
-                  ? (x, y) => handleAttack(2, x, y)
-                  : undefined
-              }
-            />
-          ) : (
-            /* In 1v1 mode, show the enemy's board based on current player */
-            <Board
-              currentPlayer={currentPlayer}
-              enemyBoard={boards[currentPlayer === 1 ? 2 : 1]}
-              isEnemyView={true}
-              onAttack={
-                currentPlayer === 1
-                  ? (x, y) => handleAttack(2, x, y)
-                  : (x, y) => handleAttack(1, x, y)
-              }
-            />
+              after:pointer-events-none
+              after:absolute after:inset-0 after:rounded-lg
+              after:bg-linear-to-b after:from-white/10 after:to-transparent
+              "
+            >
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Player {currentPlayer}'s Turn
+                </h2>
+                <p className="text-xl text-gray-300 mb-6">
+                  Pass the device to Player {currentPlayer}
+                </p>
+                <button
+                  onClick={() => setShowTurnOverlay(false)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors cursor-pointer z-10"
+                >
+                  I'm Ready!
+                </button>
+              </div>
+            </div>
           )}
+
+          <div className="flex flex-col sm:flex-row gap-6">
+            {/* Player's own board - show current player's board in 1v1, only player 1's board in 1vAI */}
+            <Board
+              currentPlayer={gameMode === "1vAI" ? 1 : currentPlayer}
+              enemyBoard={
+                gameMode === "1vAI" ? boards[1] : boards[currentPlayer]
+              }
+              isEnemyView={false}
+            />
+
+            {/* Enemy board */}
+            {gameMode === "1vAI" ? (
+              // In 1vAI mode, show player's attack board (hits/misses on AI's board)
+              <Board
+                currentPlayer={1}
+                enemyBoard={playerAttackBoard}
+                isEnemyView={true}
+                onAttack={
+                  currentPlayer === 1
+                    ? (x, y) => handleAttack(2, x, y)
+                    : undefined
+                }
+              />
+            ) : (
+              // In 1v1 mode, show the enemy's board
+              <Board
+                currentPlayer={currentPlayer}
+                enemyBoard={boards[currentPlayer === 1 ? 2 : 1]}
+                isEnemyView={true}
+                onAttack={
+                  currentPlayer === 1
+                    ? (x, y) => handleAttack(2, x, y)
+                    : (x, y) => handleAttack(1, x, y)
+                }
+              />
+            )}
+          </div>
         </div>
       )}
 

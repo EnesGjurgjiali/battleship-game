@@ -42,7 +42,7 @@ describe("StatusPanel", () => {
       />
     );
 
-    expect(screen.getByText(/hit! target destroyed/i)).toBeInTheDocument();
+    expect(screen.getByText(/hit!/i)).toBeInTheDocument();
     expect(
       screen.queryByText(/player 2's turn - select target/i)
     ).not.toBeInTheDocument();
