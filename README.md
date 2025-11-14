@@ -86,10 +86,10 @@ A modern, interactive Battleship game built with React and Vite. Play against a 
      - Submarine (3 cells)
      - Destroyer (2 cells)
 
-3. **Begin Battle**
+<!-- 3. **Begin Battle**
    - Click **Begin Battle** or press **Enter** when all ships are placed (It will auto-start if you don't :D)
    - In 1v1 mode, Player 2 will place their ships next
-   - In 1vAI mode, the AI automatically places its ships
+   - In 1vAI mode, the AI automatically places its ships -->
 
 ### Gameplay
 
@@ -102,7 +102,6 @@ A modern, interactive Battleship game built with React and Vite. Play against a 
 ### Keyboard Shortcuts
 
 - **R**: Rotate ship orientation (placement phase)
-- **Enter**: Begin battle (when all ships are placed)
 
 ## 🧪 Testing
 

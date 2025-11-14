@@ -80,7 +80,7 @@ const Controls = ({
               Randomize Fleet
             </button>
 
-            <button
+            {/* <button
               onClick={onStartBattle}
               disabled={!allShipsPlaced}
               className={`px-6 py-2.5 rounded-lg transition-all duration-200 font-semibold text-sm uppercase tracking-wide shadow-lg border ${
@@ -90,7 +90,7 @@ const Controls = ({
               }`}
             >
               Begin Battle (Enter)
-            </button>
+            </button> */}
           </>
         )}
 
