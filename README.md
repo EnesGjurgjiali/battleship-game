@@ -188,8 +188,6 @@ npm run lint         # Check code quality
 - **React Testing Library** - Component testing
 - **ESLint** - Code linting
 
-## 🎨 Features in Detail
-
 ## 🐛 Known Issues / Future Improvements
 
 - [ ] Add animations for ship placement
