@@ -388,18 +388,18 @@ const Game = () => {
         />
       ) : (
         <>
+
+          <Scoreboard
+            scores={scores}
+            currentPlayer={currentPlayer}
+            totalGames={totalGames}
+          />
           <StatusPanel
             phase={phase}
             currentPlayer={currentPlayer}
             winner={winner}
             lastAction={lastAction}
             gameMode={gameMode}
-          />
-
-          <Scoreboard
-            scores={scores}
-            currentPlayer={currentPlayer}
-            totalGames={totalGames}
           />
         </>
       )}
