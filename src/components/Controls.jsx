@@ -1,5 +1,39 @@
-//Component for game controls
-
+/**
+ * Controls Component - Game control buttons and keyboard shortcuts
+ *
+ * Provides game control buttons that change based on the current game phase.
+ * Handles keyboard shortcuts for improved user experience.
+ *
+ * Features:
+ * - Placement phase: Orientation toggle, randomize ships, begin battle
+ * - Battle/GameOver phase: New game button
+ * - Keyboard shortcuts: R (rotate), Enter (start battle)
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.phase - Current game phase ("placement" | "battle" | "gameOver")
+ * @param {Function} props.onStartBattle - Callback to start the battle phase
+ * @param {Function} props.onReset - Callback to restart/reset the game
+ * @param {Function} props.onRandomize - Callback to randomly place all ships
+ * @param {Function} props.onToggleOrientation - Callback to toggle ship orientation
+ * @param {number} props.currentPlayer - Current player number (1 or 2)
+ * @param {string} props.orientation - Current ship orientation ("horizontal" | "vertical")
+ * @param {boolean} props.allShipsPlaced - Whether all ships have been placed
+ *
+ * @returns {JSX.Element} Control buttons container with phase-appropriate actions
+ *
+ * @example
+ * <Controls
+ *   phase="placement"
+ *   onStartBattle={handleStartBattle}
+ *   onReset={handleReset}
+ *   onRandomize={handleRandomize}
+ *   onToggleOrientation={handleToggleOrientation}
+ *   currentPlayer={1}
+ *   orientation="horizontal"
+ *   allShipsPlaced={false}
+ * />
+ */
 import { useEffect } from "react";
 
 const Controls = ({

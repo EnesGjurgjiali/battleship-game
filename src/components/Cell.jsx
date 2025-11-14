@@ -1,5 +1,36 @@
-//Component for individual cell in the game grid
-
+/**
+ * Cell Component - Individual cell in the game grid
+ *
+ * Represents a single cell on the game board. Can display different states:
+ * - Empty water (default blue gradient)
+ * - Ship segment (gray gradient, only on own board)
+ * - Hit marker (red gradient with red dot)
+ * - Miss marker (gray gradient with white dot)
+ *
+ * Supports keyboard accessibility with Enter and Space keys for interactive cells.
+ * Uses ARIA labels for screen reader support.
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string|null} props.value - The cell's state value
+ *   - null: Empty water cell
+ *   - "S": Ship segment
+ *   - "H": Hit marker
+ *   - "M": Miss marker
+ * @param {Function} [props.onClick] - Click handler function
+ *   - If provided, cell becomes interactive (button role)
+ *   - If undefined, cell is non-interactive (img role)
+ *
+ * @returns {JSX.Element} A styled cell component with appropriate role and accessibility
+ *
+ * @example
+ * // Interactive cell for attacking
+ * <Cell value={null} onClick={() => handleAttack(x, y)} />
+ *
+ * @example
+ * // Non-interactive cell showing a hit
+ * <Cell value="H" />
+ */
 const Cell = ({ value, onClick }) => {
   let cellClasses =
     "bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 border-blue-400/30"; //water color

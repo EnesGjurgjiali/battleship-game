@@ -1,12 +1,52 @@
-//Component to display the current status of the game: phase, current player, and winner.
-
-const StatusPanel = ({ phase, currentPlayer, winner, lastAction }) => {
+/**
+ * StatusPanel Component - Game status and information display
+ *
+ * Displays the current game status, including phase information, current player,
+ * last action result (hit/miss), and winner announcement. Adapts messages based
+ * on game mode (1v1 vs 1vAI) to provide appropriate feedback.
+ *
+ * Status Messages:
+ * - Placement: "Player X, deploy your fleet" or "AI is deploying its fleet..."
+ * - Battle: "Player X's turn - Select target" or "AI is thinking..." or hit/miss feedback
+ * - GameOver: "Player X victorious!" or "AI victorious!"
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.phase - Current game phase ("placement" | "battle" | "gameOver")
+ * @param {number} props.currentPlayer - Current player number (1 or 2)
+ * @param {number|null} props.winner - Winner player number (1 or 2), null if game not over
+ * @param {string} props.lastAction - Last action result ("Hit!" | "Miss!" | "")
+ * @param {string} [props.gameMode="1v1"] - Current game mode ("1v1" | "1vAI")
+ *
+ * @returns {JSX.Element} Status panel with current game information
+ *
+ * @example
+ * <StatusPanel
+ *   phase="battle"
+ *   currentPlayer={1}
+ *   winner={null}
+ *   lastAction="Hit!"
+ *   gameMode="1vAI"
+ * />
+ */
+const StatusPanel = ({
+  phase,
+  currentPlayer,
+  winner,
+  lastAction,
+  gameMode = "1v1",
+}) => {
   let message = "";
   let statusColor = "text-blue-300";
 
   if (phase === "placement") {
-    message = `Player ${currentPlayer}, deploy your fleet`;
-    statusColor = "text-yellow-300";
+    if (currentPlayer === 2 && gameMode === "1vAI") {
+      message = "AI is deploying its fleet...";
+      statusColor = "text-purple-300";
+    } else {
+      message = `Player ${currentPlayer}, deploy your fleet`;
+      statusColor = "text-yellow-300";
+    }
   } else if (phase === "battle") {
     if (lastAction === "Hit!") {
       statusColor = "text-red-400";
@@ -16,11 +56,21 @@ const StatusPanel = ({ phase, currentPlayer, winner, lastAction }) => {
       message = "MISS! No contact";
     } else {
       statusColor = "text-cyan-300";
-      message = `Player ${currentPlayer}'s turn - Select target`;
+      if (currentPlayer === 2 && gameMode === "1vAI") {
+        message = "AI is thinking...";
+      } else {
+        message = `Player ${currentPlayer}'s turn - Select target`;
+      }
     }
   } else if (phase === "gameOver") {
     statusColor = "text-green-400";
-    message = `Player ${winner} victorious!`;
+    if (gameMode === "1vAI" && winner === 2) {
+      message = "AI victorious!";
+    } else if (gameMode === "1vAI" && winner === 1) {
+      message = "Player 1 victorious!";
+    } else {
+      message = `Player ${winner} victorious!`;
+    }
   }
 
   return (

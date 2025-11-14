@@ -1,4 +1,44 @@
-//Component for the game board display and interaction.
+/**
+ * Board Component - Game board display and interaction
+ *
+ * Renders a 10x10 grid representing a player's board with coordinate labels.
+ * Can display either the player's own fleet (with ships visible) or the enemy's
+ * board (with ships hidden, showing only hits and misses).
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {number} props.currentPlayer - The current player number (1 or 2)
+ * @param {Array<Array<string|null>>} props.enemyBoard - 2D array representing the board state
+ *   - null: Empty water cell
+ *   - "S": Ship segment (hidden when isEnemyView is true)
+ *   - "H": Hit marker
+ *   - "M": Miss marker
+ * @param {Function} [props.onAttack] - Callback function when a cell is clicked
+ *   - Called with (rowIndex, colIndex) when attacking enemy board
+ *   - Only active when isEnemyView is true
+ * @param {boolean} props.isEnemyView - Whether this is the enemy's board view
+ *   - true: Enemy board (ships hidden, attacks allowed)
+ *   - false: Own board (ships visible, no attacks)
+ *
+ * @returns {JSX.Element} A board component with coordinate labels and interactive cells
+ *
+ * @example
+ * // Display player's own board
+ * <Board
+ *   currentPlayer={1}
+ *   enemyBoard={playerBoard}
+ *   isEnemyView={false}
+ * />
+ *
+ * @example
+ * // Display enemy board for attacking
+ * <Board
+ *   currentPlayer={1}
+ *   enemyBoard={enemyBoard}
+ *   isEnemyView={true}
+ *   onAttack={(x, y) => handleAttack(x, y)}
+ * />
+ */
 import Cell from "./Cell";
 
 const Board = ({ currentPlayer, enemyBoard, onAttack, isEnemyView }) => {
