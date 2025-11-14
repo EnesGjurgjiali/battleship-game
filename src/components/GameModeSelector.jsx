@@ -1,5 +1,39 @@
-// Component for selecting game mode (1v1 or 1vAI) and AI difficulty
-
+/**
+ * GameModeSelector Component - Game mode and AI difficulty selection
+ *
+ * Allows players to choose between 1v1 (player vs player) and 1vAI (player vs AI) modes.
+ * When 1vAI is selected, provides difficulty level selection (Easy, Medium, Hard).
+ * Only visible during placement phase when it's Player 1's turn (before any ships are placed).
+ *
+ * Features:
+ * - Toggle between 1v1 and 1vAI modes
+ * - Difficulty selector (only in 1vAI mode)
+ * - Difficulty descriptions for each level
+ * - Auto-hides once game starts
+ *
+ * @component
+ * @param {Object} props - Component props
+ * @param {string} props.gameMode - Current game mode ("1v1" | "1vAI")
+ * @param {Function} props.onGameModeChange - Callback when game mode changes
+ *   - Called with new mode ("1v1" or "1vAI")
+ * @param {string} props.aiDifficulty - Current AI difficulty ("easy" | "medium" | "hard")
+ * @param {Function} props.onDifficultyChange - Callback when difficulty changes
+ *   - Called with new difficulty ("easy", "medium", or "hard")
+ * @param {string} props.phase - Current game phase
+ * @param {number} props.currentPlayer - Current player number
+ *
+ * @returns {JSX.Element|null} Game mode selector UI or null if conditions not met
+ *
+ * @example
+ * <GameModeSelector
+ *   gameMode="1vAI"
+ *   onGameModeChange={(mode) => setGameMode(mode)}
+ *   aiDifficulty="medium"
+ *   onDifficultyChange={(diff) => setAiDifficulty(diff)}
+ *   phase="placement"
+ *   currentPlayer={1}
+ * />
+ */
 const GameModeSelector = ({
   gameMode,
   onGameModeChange,

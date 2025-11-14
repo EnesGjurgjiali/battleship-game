@@ -1,4 +1,17 @@
-// AI Player logic with different difficulty levels
+/**
+ * AI Player Module - Artificial intelligence logic for Battleship game
+ *
+ * This module provides AI functionality for the Battleship game, including:
+ * - Automatic ship placement
+ * - Attack strategies for three difficulty levels (Easy, Medium, Hard)
+ *
+ * Difficulty Levels:
+ * - Easy: Random attacks with no strategy
+ * - Medium: Random attacks, but targets adjacent cells after a hit
+ * - Hard: Smart targeting with pattern recognition, checkerboard strategy, and directional tracking
+ *
+ * @module aiPlayer
+ */
 
 const BOARD_SIZE = 10;
 const SHIPS = [
@@ -10,7 +23,19 @@ const SHIPS = [
 ];
 
 /**
- * Places all ships randomly on the board
+ * Places all ships randomly on the board for AI player
+ *
+ * Generates a valid board configuration with all 5 ships placed randomly.
+ * Ships are placed without overlapping and within board boundaries.
+ * Uses random orientation (horizontal/vertical) for each ship.
+ *
+ * @returns {Array<Array<string|null>>} A 10x10 board array with ships placed
+ *   - null: Empty cell
+ *   - "S": Ship segment
+ *
+ * @example
+ * const aiBoard = placeAIShips();
+ * // Returns a 10x10 array with all ships placed
  */
 export const placeAIShips = () => {
   const board = Array.from({ length: BOARD_SIZE }, () =>
@@ -86,7 +111,14 @@ const getAdjacentCells = (x, y, board) => {
 };
 
 /**
- * Finds all hit cells that haven't been fully explored
+ * Finds all hit cells that have unexplored adjacent cells
+ *
+ * Identifies hits that still have adjacent cells that could be part of the ship.
+ * Used by Medium and Hard AI to continue targeting after a hit.
+ *
+ * @private
+ * @param {Array<Array<string|null>>} board - The board state
+ * @returns {Array<Array<number>>} Array of [row, col] coordinates for incomplete hits
  */
 const findIncompleteHits = (board) => {
   const incompleteHits = [];
@@ -107,7 +139,15 @@ const findIncompleteHits = (board) => {
 };
 
 /**
- * Determines the direction of a ship based on hits
+ * Determines the direction of a ship based on multiple hits
+ *
+ * Analyzes hit coordinates to determine if a ship is oriented horizontally
+ * or vertically. Requires at least 2 hits to determine direction.
+ *
+ * @private
+ * @param {Array<Array<number>>} hits - Array of [row, col] hit coordinates
+ * @param {Array<Array<string|null>>} board - The board state (unused but kept for consistency)
+ * @returns {string|null} Ship direction ("horizontal" | "vertical") or null if can't determine
  */
 const getShipDirection = (hits, board) => {
   if (hits.length < 2) return null;
@@ -122,6 +162,15 @@ const getShipDirection = (hits, board) => {
 
 /**
  * Gets cells in the direction of a hit ship
+ *
+ * Returns cells that are in the same row (horizontal) or column (vertical)
+ * as a hit, which are likely to contain more of the ship.
+ *
+ * @private
+ * @param {Array<number>} hit - [row, col] coordinates of a hit
+ * @param {string} direction - Ship direction ("horizontal" | "vertical")
+ * @param {Array<Array<string|null>>} board - The board state
+ * @returns {Array<Array<number>>} Array of [row, col] coordinates in the ship's direction
  */
 const getDirectionCells = (hit, direction, board) => {
   const [x, y] = hit;
@@ -159,7 +208,14 @@ const getDirectionCells = (hit, direction, board) => {
 };
 
 /**
- * Easy AI: Random attacks
+ * Easy AI Strategy: Completely random attacks
+ *
+ * Selects a random unexplored cell for attack. No strategy or pattern recognition.
+ * Best for beginners or casual play.
+ *
+ * @private
+ * @param {Array<Array<string|null>>} board - The board state
+ * @returns {Array<number>|null} Random attack coordinates [row, col] or null if no cells available
  */
 const easyAI = (board) => {
   const availableCells = [];
@@ -177,7 +233,15 @@ const easyAI = (board) => {
 };
 
 /**
- * Medium AI: Targets adjacent cells after a hit, otherwise random
+ * Medium AI Strategy: Targets adjacent cells after a hit, otherwise random
+ *
+ * If there are incomplete hits (hits with unexplored adjacent cells), targets
+ * one of those adjacent cells. Otherwise, falls back to random attacks.
+ * Provides moderate challenge for intermediate players.
+ *
+ * @private
+ * @param {Array<Array<string|null>>} board - The board state
+ * @returns {Array<number>|null} Attack coordinates [row, col] or null if no cells available
  */
 const mediumAI = (board) => {
   const incompleteHits = findIncompleteHits(board);
@@ -198,7 +262,19 @@ const mediumAI = (board) => {
 };
 
 /**
- * Hard AI: Smart targeting with pattern recognition
+ * Hard AI Strategy: Smart targeting with pattern recognition
+ *
+ * Advanced strategy that includes:
+ * 1. Directional targeting: Detects ship direction from multiple hits
+ * 2. Prioritized adjacent cells: Chooses cells with more unexplored neighbors
+ * 3. Checkerboard pattern: Uses efficient checkerboard pattern for initial attacks
+ * 4. Pattern recognition: Tracks incomplete hits and continues in ship direction
+ *
+ * Provides significant challenge for experienced players.
+ *
+ * @private
+ * @param {Array<Array<string|null>>} board - The board state
+ * @returns {Array<number>|null} Attack coordinates [row, col] or null if no cells available
  */
 const hardAI = (board) => {
   const incompleteHits = findIncompleteHits(board);
@@ -268,6 +344,28 @@ const hardAI = (board) => {
 
 /**
  * Main AI attack function - selects difficulty and returns attack coordinates
+ *
+ * Determines the next attack coordinates based on the selected difficulty level
+ * and the current board state (showing hits and misses).
+ *
+ * @param {Array<Array<string|null>>} board - The board state showing AI's view
+ *   - null: Unexplored cell
+ *   - "H": Hit marker
+ *   - "M": Miss marker
+ *   Note: Ships ("S") should never be in this board as AI doesn't see enemy ships
+ * @param {string} [difficulty="medium"] - AI difficulty level ("easy" | "medium" | "hard")
+ *
+ * @returns {Array<number>|null} Attack coordinates [row, col] or null if no valid attacks
+ *
+ * @example
+ * const board = createEmptyBoard();
+ * board[5][5] = "H"; // AI has hit something
+ * const attack = getAIAttack(board, "medium");
+ * // Returns [4, 5] or [6, 5] or [5, 4] or [5, 6] (adjacent to hit)
+ *
+ * @example
+ * const attack = getAIAttack(emptyBoard(), "hard");
+ * // Returns coordinates following checkerboard pattern
  */
 export const getAIAttack = (board, difficulty = "medium") => {
   switch (difficulty) {

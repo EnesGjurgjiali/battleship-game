@@ -1,5 +1,26 @@
-// Component for the main game logic and state management
-
+/**
+ * Game Component - Main game logic and state management
+ *
+ * This is the core component that manages the entire Battleship game state,
+ * including game phases (placement, battle, gameOver), player turns, ship placement,
+ * attack handling, AI integration, and score tracking.
+ *
+ * Features:
+ * - Manages game state (phase, current player, boards, scores)
+ * - Handles ship placement for both players
+ * - Processes attacks and determines winners
+ * - Integrates AI player with three difficulty levels
+ * - Tracks game statistics across multiple rounds
+ * - Manages two game modes: 1v1 and 1vAI
+ *
+ * Game Phases:
+ * - "placement": Players place their ships on the board
+ * - "battle": Players take turns attacking each other
+ * - "gameOver": Game has ended, winner is determined
+ *
+ * @component
+ * @returns {JSX.Element} The main game interface with all sub-components
+ */
 import { useState, useEffect, useRef } from "react";
 import StatusPanel from "./StatusPanel";
 import ShipPlacement from "./ShipPlacement";
