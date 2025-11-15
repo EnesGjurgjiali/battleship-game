@@ -45,8 +45,7 @@ A modern, interactive Battleship game built with React and Vite. Play against a 
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
-   cd battleship-game/frontend
+   git clone https://github.com/EnesGjurgjiali/battleship-game.git
    ```
 
 2. **Install dependencies**
